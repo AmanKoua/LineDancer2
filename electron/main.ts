@@ -32,6 +32,8 @@ function createWindow() {
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
     },
+    width:1000,
+    height:1000
   })
 
   // Test active push message to Renderer-process.

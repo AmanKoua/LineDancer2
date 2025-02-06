@@ -1,11 +1,10 @@
-import { useState } from 'react'
+import { SetUp } from "./pages/SetUp/SetUp"
+import "./App.css"
 
 function App() {
 
   return (
-    <h1>
-      Hello world!
-    </h1>
+    <SetUp/>
   )
 }
 
