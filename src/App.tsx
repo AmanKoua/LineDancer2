@@ -3,8 +3,6 @@ import { Renderer } from "./pages/Renderer/Renderer";
 import { useState } from "react";
 import "./App.css";
 
-
-
 function App() {
   const [panel, setPanel] = useState<string>("setUp");
 
@@ -49,7 +47,27 @@ function App() {
           goToPanel={goToPanel}
         />
       )}
-      {panel === "renderer" && <Renderer/>}
+      {panel === "renderer" && (
+        <Renderer
+          audioFileBuffer={audioFileBuffer}
+          videoFileBuffer={videoFileBuffer}
+          fps={fps}
+          duration={duration}
+          pointCount={pointCount}
+          width={width}
+          height={height}
+          maxDistThresh={maxDistThresh}
+          setAudioFileBuffer={setAudioFileBuffer}
+          setVideoFileBuffer={setVideoFileBuffer}
+          setFps={setFps}
+          setDuration={setDuration}
+          setPointCount={setPointCount}
+          setWidth={setWidth}
+          setHeight={setHeight}
+          setMaxDistThresh={setMaxDistThresh}
+          goToPanel={goToPanel}
+        />
+      )}
     </>
   );
 }

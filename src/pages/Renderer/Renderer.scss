@@ -1,0 +1,11 @@
+.renderer__main{
+
+    display: flex;
+    height: 100vh;
+
+    .renderer__canvas{
+        border:1px solid black;
+        margin:auto;
+    }
+}
+
