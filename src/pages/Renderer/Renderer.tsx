@@ -1,7 +1,8 @@
 import { ICorePageProps } from "../../types"
 import { useRef, useEffect} from "react";
-import { createSeededRNG, saveSerializedPoints } from "./utils";
+import { createSeededRNG } from "./utils";
 import {v4 as uuidv4} from "uuid";
+import { ipcRenderer } from "electron";
 
 import "./Renderer.css";
 
@@ -27,6 +28,15 @@ export const Renderer = ({
     setInstanceUUID,
     goToPanel
 }:ICorePageProps) => {
+
+    // ----------------- IPC POC -----------------------
+    const ipcOn = window.ipcRenderer.on;
+    const ipcSend = window.ipcRenderer.send;
+    ipcSend("SERIALIZE_AND_PERSIST_POINT_DATA");
+    ipcOn("SERIALIZE_AND_PERSIST_POINT_DATA_RESPONSE", () => {
+        alert("received main process response!");
+    })
+    // ----------------- IPC POC -----------------------
 
     // TODO : remove temp initialization values!
     pointCount = 300;

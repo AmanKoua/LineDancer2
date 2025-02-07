@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, ipcMain } from 'electron'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
@@ -39,7 +39,7 @@ function createWindow() {
   // Test active push message to Renderer-process.
   win.webContents.on('did-finish-load', () => {
     win?.webContents.send('main-process-message', (new Date).toLocaleString())
-  })
+  });
 
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL)
@@ -47,6 +47,14 @@ function createWindow() {
     // win.loadFile('dist/index.html')
     win.loadFile(path.join(RENDERER_DIST, 'index.html'))
   }
+
+  // --------------------------- IPCs -------------------------------
+  ipcMain.on("SERIALIZE_AND_PERSIST_POINT_DATA", () => {
+    console.log("------- message received by main process! -------------");
+    win!.webContents.send("SERIALIZE_AND_PERSIST_POINT_DATA_RESPONSE");
+  });
+  // --------------------------- IPCs -------------------------------
+
 }
 
 // Quit when all windows are closed, except on macOS. There, it's common
