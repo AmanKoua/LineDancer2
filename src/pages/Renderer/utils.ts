@@ -1,3 +1,6 @@
+import { Point } from "../../types";
+// import fs from "fs";
+
 // returns a function, which will deterministically return a series of pseudo-random values, based on a seed.
 export function createSeededRNG(state: number) {
     return function() {
@@ -5,3 +8,7 @@ export function createSeededRNG(state: number) {
         return (state >>> 0) / 4294967296; // Convert to [0, 1)
     };
 }
+
+// export function saveSerializedPoints(instanceUUID: string, points: Point[]) {
+//     console.log(fs.readdirSync("./"));
+// }

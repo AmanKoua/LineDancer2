@@ -10,6 +10,8 @@ export interface ICorePageProps {
     width: number;
     height: number;
     maxDistThresh: number;
+    rngSeed: number;
+    instanceUUID: string;
 
     setAudioFileBuffer:SetState<ArrayBuffer | null>;
     setVideoFileBuffer:SetState<ArrayBuffer | null>;
@@ -19,6 +21,15 @@ export interface ICorePageProps {
     setWidth:SetState<number>;
     setHeight:SetState<number>;
     setMaxDistThresh:SetState<number>;
+    setRngSeed: SetState<number>;
+    setInstanceUUID: SetState<string>;
 
     goToPanel: (val: string) => void;
+}
+
+export interface Point {
+    x: number;
+    y:number;
+    speedX: number;
+    speedY: number;
 }

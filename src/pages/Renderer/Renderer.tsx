@@ -1,8 +1,9 @@
 import { ICorePageProps } from "../../types"
 import { useRef, useEffect} from "react";
-import seedRandom from "seedrandom";
+import { createSeededRNG, saveSerializedPoints } from "./utils";
+import {v4 as uuidv4} from "uuid";
+
 import "./Renderer.css";
-import { createSeededRNG } from "./utils";
 
 export const Renderer = ({
     audioFileBuffer,
@@ -13,6 +14,8 @@ export const Renderer = ({
     width,
     height,
     maxDistThresh,
+    rngSeed,    
+    instanceUUID,
     setAudioFileBuffer,
     setVideoFileBuffer,
     setFps,
@@ -21,6 +24,7 @@ export const Renderer = ({
     setWidth,
     setHeight,
     setMaxDistThresh,
+    setInstanceUUID,
     goToPanel
 }:ICorePageProps) => {
 
@@ -30,6 +34,8 @@ export const Renderer = ({
     height = 500;
     maxDistThresh = 30;
     fps = 20;
+    rngSeed = 1360736;
+    instanceUUID = uuidv4();
 
     let canvasRef = useRef<HTMLCanvasElement>(null);
     let renderInterval: NodeJS.Timeout | undefined = undefined;
@@ -37,7 +43,7 @@ export const Renderer = ({
 
     class Point {
         x: number;
-        y:number ;
+        y:number;
         speedX: number;
         speedY: number;
 
@@ -119,7 +125,7 @@ export const Renderer = ({
         const h = height;
         const pc = pointCount;
 
-        var rng = createSeededRNG(5642);
+        var rng = createSeededRNG(rngSeed);
 
         for(let i = 0; i < pc; i++){
             points.push(
@@ -131,6 +137,8 @@ export const Renderer = ({
                 )
             )
         }
+
+        // saveSerializedPoints("",[]);
 
     }
 

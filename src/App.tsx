@@ -20,6 +20,8 @@ function App() {
   const [width, setWidth] = useState<number>(0);
   const [height, setHeight] = useState<number>(0);
   const [maxDistThresh, setMaxDistThresh] = useState<number>(0);
+  const [rngSeed,setRngSeed] = useState<number>(-1);
+  const [instanceUUID, setInstanceUUID] = useState<string>("");
 
   const goToPanel = (val: string) => {
     setPanel(val);
@@ -37,6 +39,8 @@ function App() {
           width={width}
           height={height}
           maxDistThresh={maxDistThresh}
+          rngSeed={rngSeed}
+          instanceUUID={instanceUUID}
           setAudioFileBuffer={setAudioFileBuffer}
           setVideoFileBuffer={setVideoFileBuffer}
           setFps={setFps}
@@ -45,6 +49,8 @@ function App() {
           setWidth={setWidth}
           setHeight={setHeight}
           setMaxDistThresh={setMaxDistThresh}
+          setRngSeed={setRngSeed}
+          setInstanceUUID={setInstanceUUID}
           goToPanel={goToPanel}
         />
       )}
@@ -58,6 +64,8 @@ function App() {
           width={width}
           height={height}
           maxDistThresh={maxDistThresh}
+          rngSeed={rngSeed}
+          instanceUUID={instanceUUID}
           setAudioFileBuffer={setAudioFileBuffer}
           setVideoFileBuffer={setVideoFileBuffer}
           setFps={setFps}
@@ -66,6 +74,8 @@ function App() {
           setWidth={setWidth}
           setHeight={setHeight}
           setMaxDistThresh={setMaxDistThresh}
+          setRngSeed={setRngSeed}
+          setInstanceUUID={setInstanceUUID}
           goToPanel={goToPanel}
         />
       )}

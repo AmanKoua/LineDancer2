@@ -1,6 +1,7 @@
 import "./SetUp.css";
 import { ICorePageProps } from "../../types";
 import { PANELS } from "../../constants";
+import {v4 as uuidv4} from "uuid";
 
 export const SetUp = ({
     audioFileBuffer,
@@ -19,6 +20,7 @@ export const SetUp = ({
     setWidth,
     setHeight,
     setMaxDistThresh,
+    setInstanceUUID,
     goToPanel
 }:ICorePageProps) => {
   const continueHandler = (
@@ -51,6 +53,7 @@ export const SetUp = ({
       return;
     }
 
+    setInstanceUUID(uuidv4())
     goToPanel(PANELS.RENDERER);
 
   };
