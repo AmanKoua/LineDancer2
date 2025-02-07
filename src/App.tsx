@@ -2,9 +2,10 @@ import { SetUp } from "./pages/SetUp/SetUp";
 import { Renderer } from "./pages/Renderer/Renderer";
 import { useState } from "react";
 import "./App.css";
+import { PANELS } from "./constants";
 
 function App() {
-  const [panel, setPanel] = useState<string>("setUp");
+  const [panel, setPanel] = useState<string>(PANELS.RENDERER);
 
   const [audioFileBuffer, setAudioFileBuffer] = useState<ArrayBuffer | null>(
     null
@@ -26,7 +27,7 @@ function App() {
 
   return (
     <>
-      {panel === "setUp" && (
+      {panel === PANELS.SET_UP && (
         <SetUp
           audioFileBuffer={audioFileBuffer}
           videoFileBuffer={videoFileBuffer}
@@ -47,7 +48,7 @@ function App() {
           goToPanel={goToPanel}
         />
       )}
-      {panel === "renderer" && (
+      {panel === PANELS.RENDERER && (
         <Renderer
           audioFileBuffer={audioFileBuffer}
           videoFileBuffer={videoFileBuffer}
