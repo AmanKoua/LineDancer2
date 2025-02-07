@@ -1,27 +1,7 @@
 import "./SetUp.css";
 import { useState } from "react";
-
-type SetState<T> = React.Dispatch<React.SetStateAction<T>>;
-
-interface ISetUpProps {
-    audioFileBuffer:ArrayBuffer | null;
-    videoFileBuffer:ArrayBuffer | null;
-    fps:string;
-    duration:string;
-    pointCount: string;
-    width: string;
-    height: string;
-    maxDistThresh: string;
-
-    setAudioFileBuffer:SetState<ArrayBuffer | null>;
-    setVideoFileBuffer:SetState<ArrayBuffer | null>;
-    setFps:SetState<string>;
-    setDuration:SetState<string>;
-    setPointCount:SetState<string>;
-    setWidth:SetState<string>;
-    setHeight:SetState<string>;
-    setMaxDistThresh:SetState<string>;
-}
+import { SetState, ICorePageProps } from "../../types";
+import { PANELS } from "../../constants";
 
 export const SetUp = ({
     audioFileBuffer,
@@ -39,8 +19,9 @@ export const SetUp = ({
     setPointCount,
     setWidth,
     setHeight,
-    setMaxDistThresh
-}:ISetUpProps) => {
+    setMaxDistThresh,
+    goToPanel
+}:ICorePageProps) => {
   const continueHandler = (
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>
   ) => {
@@ -70,6 +51,8 @@ export const SetUp = ({
     if (!getIsValidRange(maxDistThresh, 1, 1500, "maxDistThresh")) {
       return;
     }
+
+    goToPanel(PANELS.RENDERER);
 
   };
 
