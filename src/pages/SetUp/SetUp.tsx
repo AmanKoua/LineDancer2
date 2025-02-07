@@ -1,21 +1,46 @@
 import "./SetUp.css";
 import { useState } from "react";
 
-export const SetUp = () => {
-  const [audioFileBuffer, setAudioFileBuffer] = useState<ArrayBuffer | null>(
-    null
-  );
-  const [videoFileBuffer, setVideoFileBuffer] = useState<ArrayBuffer | null>(
-    null
-  );
+type SetState<T> = React.Dispatch<React.SetStateAction<T>>;
 
-  const [fps, setFps] = useState("");
-  const [duration, setDuration] = useState("");
-  const [pointCount, setPointCount] = useState("");
-  const [width, setWidth] = useState("");
-  const [height, setHeight] = useState("");
-  const [maxDistThresh, setMaxDistThresh] = useState("");
+interface ISetUpProps {
+    audioFileBuffer:ArrayBuffer | null;
+    videoFileBuffer:ArrayBuffer | null;
+    fps:string;
+    duration:string;
+    pointCount: string;
+    width: string;
+    height: string;
+    maxDistThresh: string;
 
+    setAudioFileBuffer:SetState<ArrayBuffer | null>;
+    setVideoFileBuffer:SetState<ArrayBuffer | null>;
+    setFps:SetState<string>;
+    setDuration:SetState<string>;
+    setPointCount:SetState<string>;
+    setWidth:SetState<string>;
+    setHeight:SetState<string>;
+    setMaxDistThresh:SetState<string>;
+}
+
+export const SetUp = ({
+    audioFileBuffer,
+    videoFileBuffer,
+    fps,
+    duration,
+    pointCount,
+    width,
+    height,
+    maxDistThresh,
+    setAudioFileBuffer,
+    setVideoFileBuffer,
+    setFps,
+    setDuration,
+    setPointCount,
+    setWidth,
+    setHeight,
+    setMaxDistThresh
+}:ISetUpProps) => {
   const continueHandler = (
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>
   ) => {
