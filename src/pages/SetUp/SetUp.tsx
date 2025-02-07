@@ -1,6 +1,5 @@
 import "./SetUp.css";
-import { useState } from "react";
-import { SetState, ICorePageProps } from "../../types";
+import { ICorePageProps } from "../../types";
 import { PANELS } from "../../constants";
 
 export const SetUp = ({
@@ -57,16 +56,16 @@ export const SetUp = ({
   };
 
   const getIsValidRange = (
-    value: string,
+    value: number,
     min: number,
     max: number,
     name: string
   ): boolean => {
     if (
       !value ||
-      Number.parseInt(value) < min ||
-      Number.parseInt(value) > max ||
-      Number.isNaN(Number.parseInt(value))
+      value < min ||
+      value > max ||
+      Number.isNaN(value)
     ) {
       alert(`Invalid ${name} value!`);
       return false;
@@ -147,7 +146,7 @@ export const SetUp = ({
                 type="text"
                 value={fps}
                 onChange={(e) => {
-                  setFps(e.target.value);
+                  setFps(Number.parseInt(e.target.value));
                 }}
               ></input>
             </div>
@@ -158,7 +157,7 @@ export const SetUp = ({
                 type="text"
                 value={duration}
                 onChange={(e) => {
-                  setDuration(e.target.value);
+                  setDuration(Number.parseInt(e.target.value));
                 }}
               ></input>
             </div>
@@ -169,7 +168,7 @@ export const SetUp = ({
                 type="text"
                 value={pointCount}
                 onChange={(e) => {
-                  setPointCount(e.target.value);
+                  setPointCount(Number.parseInt(e.target.value));
                 }}
               ></input>
             </div>
@@ -180,7 +179,7 @@ export const SetUp = ({
                 type="text"
                 value={width}
                 onChange={(e) => {
-                  setWidth(e.target.value);
+                  setWidth(Number.parseInt(e.target.value));
                 }}
               ></input>
             </div>
@@ -190,7 +189,7 @@ export const SetUp = ({
               <input
                 type="text"
                 value={height}
-                onChange={(e) => setHeight(e.target.value)}
+                onChange={(e) => setHeight(Number.parseInt(e.target.value))}
               ></input>
             </div>
 
@@ -199,7 +198,7 @@ export const SetUp = ({
               <input
                 type="text"
                 value={maxDistThresh}
-                onChange={(e) => setMaxDistThresh(e.target.value)}
+                onChange={(e) => setMaxDistThresh(Number.parseInt(e.target.value))}
               ></input>
             </div>
           </fieldset>

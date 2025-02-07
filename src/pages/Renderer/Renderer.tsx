@@ -23,10 +23,11 @@ export const Renderer = ({
 }:ICorePageProps) => {
 
     // TODO : remove temp initialization values!
-    pointCount = "100";
-    width = "500";
-    height = "500";
-    fps = "20";
+    pointCount = 300;
+    width = 500;
+    height = 500;
+    maxDistThresh = 30;
+    fps = 20;
 
     let canvasRef = useRef<HTMLCanvasElement>(null);
     let renderInterval: NodeJS.Timeout | undefined = undefined;
@@ -50,27 +51,41 @@ export const Renderer = ({
             ctx.closePath();
             ctx.fill();
             ctx.stroke();
+
+
+            this.drawLinesToOtherPoints(ctx);
+
         }
 
         drawLinesToOtherPoints(ctx: CanvasRenderingContext2D){
 
-            for(let i = 0; i < Number.parseInt(pointCount); i++){
+            for(let i = 0; i < pointCount; i++){
+
+                if(this.x === points[i].x && this.y === points[i].y){
+                    continue
+                }
+
+                if(!this.isBelowMaxDistThresh(points[i])){
+                    continue;
+                }
+
+                ctx.beginPath();
+                ctx.moveTo(this.x,this.y);
+                ctx.lineTo(points[i].x, points[i].y);
+                ctx.closePath();
+                ctx.lineWidth = 1;  
+                ctx.stroke();
 
             }
-
-            ctx.beginPath();
-            ctx.moveTo(this.x,this.y);
-            // ctx.lineTo();
-            ctx.closePath();
-            ctx.stroke();
 
         }
 
         isBelowMaxDistThresh(point: Point): boolean {
-
-            return false;
-
-        }
+            const dx = point.x - this.x;
+            const dy = point.y - this.y;
+            const dist = Math.sqrt((dx*dx) + (dy * dy));
+            return dist < maxDistThresh;
+        }       
 
         updatePosition(width:number, height:number) {
             
@@ -93,9 +108,9 @@ export const Renderer = ({
         // TODO : initialize with seed, such that consecutive initializations will be saved.
         // Alternatively, store the values in a protobuf.
 
-        const w = Number.parseInt(width);
-        const h = Number.parseInt(height);
-        const pc = Number.parseInt(pointCount);
+        const w = width;
+        const h = height;
+        const pc = pointCount;
 
         for(let i = 0; i < pc; i++){
             points.push(
@@ -121,9 +136,9 @@ export const Renderer = ({
         }
 
         const ctx: CanvasRenderingContext2D = canvasRef.current.getContext("2d")!;
-        const w = Number.parseInt(width);
-        const h = Number.parseInt(height);
-        const pc = Number.parseInt(pointCount);
+        const w = width;
+        const h = height;
+        const pc = pointCount;
 
         ctx.clearRect(0,0,w,h);
 
@@ -142,7 +157,7 @@ export const Renderer = ({
 
         renderInterval = setInterval(()=>{
             draw();
-        },Number.parseInt(fps))
+        }, fps)
 
     }
 

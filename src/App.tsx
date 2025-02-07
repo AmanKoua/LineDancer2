@@ -14,12 +14,12 @@ function App() {
     null
   );
 
-  const [fps, setFps] = useState("");
-  const [duration, setDuration] = useState("");
-  const [pointCount, setPointCount] = useState("");
-  const [width, setWidth] = useState("");
-  const [height, setHeight] = useState("");
-  const [maxDistThresh, setMaxDistThresh] = useState("");
+  const [fps, setFps] = useState<number>(40);
+  const [duration, setDuration] = useState<number>(0);
+  const [pointCount, setPointCount] = useState<number>(0);
+  const [width, setWidth] = useState<number>(0);
+  const [height, setHeight] = useState<number>(0);
+  const [maxDistThresh, setMaxDistThresh] = useState<number>(0);
 
   const goToPanel = (val: string) => {
     setPanel(val);
