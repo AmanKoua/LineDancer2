@@ -1,6 +1,8 @@
 import { ICorePageProps } from "../../types"
 import { useRef, useEffect} from "react";
+import seedRandom from "seedrandom";
 import "./Renderer.css";
+import { createSeededRNG } from "./utils";
 
 export const Renderer = ({
     audioFileBuffer,
@@ -38,11 +40,17 @@ export const Renderer = ({
         y:number ;
         speedX: number;
         speedY: number;
+
         constructor(x: number,y: number,speedX: number,speedY: number){
             this.x = x;
             this.y = y;
             this.speedX = speedX;
             this.speedY = speedY;
+        }
+
+        static constructFromJson(json: string): Point {
+            const obj: Point = JSON.parse(json);
+            return new Point(obj.x,obj.y,obj.speedX, obj.speedY);
         }
 
         draw(ctx: CanvasRenderingContext2D){
@@ -54,7 +62,6 @@ export const Renderer = ({
 
 
             this.drawLinesToOtherPoints(ctx);
-
         }
 
         drawLinesToOtherPoints(ctx: CanvasRenderingContext2D){
@@ -112,13 +119,15 @@ export const Renderer = ({
         const h = height;
         const pc = pointCount;
 
+        var rng = createSeededRNG(5642);
+
         for(let i = 0; i < pc; i++){
             points.push(
                 new Point(
-                    Math.floor(Math.random() * w),
-                    Math.floor(Math.random() * h),
-                    (Math.random() * 3) + 1,
-                    (Math.random() * 3) + 1,
+                    Math.floor(rng() * w),
+                    Math.floor(rng() * h),
+                    (rng() * 3) + 1,
+                    (rng() * 3) + 1,
                 )
             )
         }
