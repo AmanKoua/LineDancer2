@@ -147,12 +147,7 @@ export const Renderer = ({
                 continue;
             }
 
-            if(points.length > 0){
-                return true;
-            } else if (points.length === 0) {
-                return false;
-            }
-
+            return points.length > 0;
         }
 
         return false;
