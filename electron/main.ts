@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
+import { registerIpcHandler } from './mainIpcService'
 
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -49,10 +50,7 @@ function createWindow() {
   }
 
   // --------------------------- IPCs -------------------------------
-  ipcMain.on("SERIALIZE_AND_PERSIST_POINT_DATA", () => {
-    console.log("------- message received by main process! -------------");
-    win!.webContents.send("SERIALIZE_AND_PERSIST_POINT_DATA_RESPONSE");
-  });
+  registerIpcHandler(win);
   // --------------------------- IPCs -------------------------------
 
 }

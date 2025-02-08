@@ -5,6 +5,7 @@ import {v4 as uuidv4} from "uuid";
 import { ipcRenderer } from "electron";
 
 import "./Renderer.css";
+import { registerIpcHandler, serializeAndPersistPointData } from "../rendererIpcService";
 
 export const Renderer = ({
     audioFileBuffer,
@@ -30,12 +31,10 @@ export const Renderer = ({
 }:ICorePageProps) => {
 
     // ----------------- IPC POC -----------------------
-    const ipcOn = window.ipcRenderer.on;
-    const ipcSend = window.ipcRenderer.send;
-    ipcSend("SERIALIZE_AND_PERSIST_POINT_DATA");
-    ipcOn("SERIALIZE_AND_PERSIST_POINT_DATA_RESPONSE", () => {
-        alert("received main process response!");
-    })
+
+    serializeAndPersistPointData([]);
+    registerIpcHandler();
+
     // ----------------- IPC POC -----------------------
 
     // TODO : remove temp initialization values!
