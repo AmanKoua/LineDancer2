@@ -17,6 +17,7 @@ dist-ssr
 *.mp4
 *.mp3
 /data
+notes.md
 
 # Editor directories and files
 .vscode/*
