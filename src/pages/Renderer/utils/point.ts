@@ -1,4 +1,4 @@
-import { IPoint } from "../../types";
+import { IPoint } from "../../../types";
 
 export class Point {
   x: number;

@@ -1,6 +1,6 @@
 import { ICorePageProps, IPoint } from "../../types";
 import { useRef, useEffect } from "react";
-import { createSeededRNG, sleep } from "./utils";
+import { createSeededRNG, sleep } from "./utils/utils";
 
 import "./Renderer.css";
 import {
@@ -8,7 +8,7 @@ import {
   registerIpcHandler,
   serializeAndPersistPointData,
 } from "../rendererIpcService";
-import { Point } from "./point";
+import { Point } from "./utils/point";
 
 export const Renderer = ({
   audioFileBuffer,
