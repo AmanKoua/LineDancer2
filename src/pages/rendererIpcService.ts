@@ -1,15 +1,27 @@
-import { Point } from "../types";
+import { IPoint } from "../types";
 
 const ipcOn = window.ipcRenderer.on;
 const ipcSend = window.ipcRenderer.send;
 
-export const registerIpcHandler = () => {
+export const registerIpcHandler = (points: IPoint[], updatePoints: (val: IPoint[]) => void) => {
     ipcOn("SERIALIZE_AND_PERSIST_POINT_DATA_RESPONSE", () => {
-        console.log("received main process response!");
+        console.log("Persisted points...");
+    })  
+
+    ipcOn("GET_SERIALIZED_POINTS_DATA_RESPONSE", (_, data: string) => {
+        if(data.length === 0){
+            return;
+        }
+
+        updatePoints(JSON.parse(data))
     })
 }
 
-export const serializeAndPersistPointData = (points: Point[], instanceUUID: string) => {
+export const getSerializedPointsData = (instanceUUID: string) => {
+    ipcSend("GET_SERIALIZED_POINTS_DATA", instanceUUID);
+}
+
+export const serializeAndPersistPointData = (points: IPoint[], instanceUUID: string) => {
     ipcSend("SERIALIZE_AND_PERSIST_POINT_DATA", JSON.stringify(points), instanceUUID);
 }
 

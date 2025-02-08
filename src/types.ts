@@ -27,7 +27,7 @@ export interface ICorePageProps {
     goToPanel: (val: string) => void;
 }
 
-export interface Point {
+export interface IPoint {
     x: number;
     y:number;
     speedX: number;

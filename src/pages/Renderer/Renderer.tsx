@@ -1,11 +1,11 @@
-import { ICorePageProps } from "../../types"
+import { ICorePageProps, IPoint } from "../../types"
 import { useRef, useEffect} from "react";
-import { createSeededRNG } from "./utils";
+import { createSeededRNG, sleep } from "./utils";
 import {v4 as uuidv4} from "uuid";
 import { ipcRenderer } from "electron";
 
 import "./Renderer.css";
-import { registerIpcHandler, serializeAndPersistPointData } from "../rendererIpcService";
+import { getSerializedPointsData, registerIpcHandler, serializeAndPersistPointData } from "../rendererIpcService";
 
 export const Renderer = ({
     audioFileBuffer,
@@ -30,22 +30,33 @@ export const Renderer = ({
     goToPanel
 }:ICorePageProps) => {
 
-    // ----------------- IPC POC -----------------------
-    registerIpcHandler();
-    // ----------------- IPC POC -----------------------
-
     // TODO : remove temp initialization values!
     pointCount = 300;
     width = 500;
     height = 500;
     maxDistThresh = 30;
-    fps = 20;
+    fps = 30;
     rngSeed = 1360736;
-    instanceUUID = uuidv4();
+    // instanceUUID = uuidv4();
+    instanceUUID = "9893b066-a0b3-4583-a749-9f078b1f9cae";
 
     let canvasRef = useRef<HTMLCanvasElement>(null);
     let renderInterval: NodeJS.Timeout | undefined = undefined;
-    const points: Point[] = [];
+    let points: Point[] = [];
+    let updatePointsCallCount = 0;
+    
+    const updatePoints = (val: IPoint[]) => {
+        updatePointsCallCount++;
+        points = [];
+
+        for(let i = 0; i < val.length; i++){
+            points.push(Point.constructFromPointData(val[i]))
+        }
+    }
+
+    // ----------------- IPC POC -----------------------
+    registerIpcHandler(points, updatePoints);
+    // ----------------- IPC POC -----------------------
 
     class Point {
         x: number;
@@ -60,9 +71,8 @@ export const Renderer = ({
             this.speedY = speedY;
         }
 
-        static constructFromJson(json: string): Point {
-            const obj: Point = JSON.parse(json);
-            return new Point(obj.x,obj.y,obj.speedX, obj.speedY);
+        static constructFromPointData(data: IPoint): Point {
+            return new Point(data.x,data.y,data.speedX,data.speedY);
         }
 
         draw(ctx: CanvasRenderingContext2D){
@@ -123,9 +133,38 @@ export const Renderer = ({
 
     }
 
-    const initializePoints = () => {
-        // TODO : initialize with seed, such that consecutive initializations will be saved.
-        // Alternatively, store the values in a protobuf.
+    const getPeristedPointData = async (): Promise<boolean> => {
+        let dataRetrievalAttempts = 0;
+
+        while(dataRetrievalAttempts < 3) {
+            getSerializedPointsData(instanceUUID);
+            await sleep(500);
+    
+            const didRetrievalAttemptComplete = updatePointsCallCount > 0;
+
+            if(!didRetrievalAttemptComplete){
+                dataRetrievalAttempts++;
+                continue;
+            }
+
+            if(points.length > 0){
+                return true;
+            } else if (points.length === 0) {
+                return false;
+            }
+
+        }
+
+        return false;
+    }
+
+    const initializePoints = async () => {
+
+        let didGetPersistedPointsData: boolean = await getPeristedPointData();
+
+        if(didGetPersistedPointsData){
+            return;
+        }
 
         const w = width;
         const h = height;
@@ -148,10 +187,10 @@ export const Renderer = ({
         
     }
 
-    const draw = () => {
+    const draw = async () => {
     
         if(points.length == 0){
-            initializePoints();
+           await initializePoints();
         }
 
         if(!canvasRef.current){
