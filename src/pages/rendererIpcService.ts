@@ -5,11 +5,11 @@ const ipcSend = window.ipcRenderer.send;
 
 export const registerIpcHandler = () => {
     ipcOn("SERIALIZE_AND_PERSIST_POINT_DATA_RESPONSE", () => {
-        alert("received main process response!");
+        console.log("received main process response!");
     })
 }
 
-export const serializeAndPersistPointData = (points: Point[]) => {
-    ipcSend("SERIALIZE_AND_PERSIST_POINT_DATA", points);
+export const serializeAndPersistPointData = (points: Point[], instanceUUID: string) => {
+    ipcSend("SERIALIZE_AND_PERSIST_POINT_DATA", JSON.stringify(points), instanceUUID);
 }
 

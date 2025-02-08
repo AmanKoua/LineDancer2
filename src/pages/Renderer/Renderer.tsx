@@ -31,10 +31,7 @@ export const Renderer = ({
 }:ICorePageProps) => {
 
     // ----------------- IPC POC -----------------------
-
-    serializeAndPersistPointData([]);
     registerIpcHandler();
-
     // ----------------- IPC POC -----------------------
 
     // TODO : remove temp initialization values!
@@ -147,8 +144,8 @@ export const Renderer = ({
             )
         }
 
-        // saveSerializedPoints("",[]);
-
+        serializeAndPersistPointData(points, instanceUUID);
+        
     }
 
     const draw = () => {
