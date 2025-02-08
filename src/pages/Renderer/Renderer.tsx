@@ -36,12 +36,13 @@ export const Renderer = ({
     width = 500;
     height = 500;
     maxDistThresh = 30;
-    fps = 30;
-    rngSeed = 1360736;
+    fps = 1000; // TODO : revert after testing (to ~30)
+    rngSeed = 1360736; // TODO : take rngSeed from setup component. Store RNGseed in data dir
     // instanceUUID = uuidv4();
-    instanceUUID = "9893b066-a0b3-4583-a749-9f078b1f9cae";
+    instanceUUID = "9893b066-a0b3-4583-a749-9f078b1f9cae"; // TODO : take instanceUUID from setup component
 
     let canvasRef = useRef<HTMLCanvasElement>(null);
+    let videoRef = useRef<HTMLVideoElement>(null);
     let renderInterval: NodeJS.Timeout | undefined = undefined;
     let points: Point[] = [];
     let updatePointsCallCount = 0;
@@ -122,6 +123,19 @@ export const Renderer = ({
         const pc = pointCount;
 
         ctx.clearRect(0,0,w,h);
+        ctx.globalAlpha = 0.4;
+        ctx.drawImage(videoRef.current!, 0, 0); // draws video on top of canvas
+        ctx.globalAlpha = 1;
+
+        /**
+         * TODO : STOPPED HERE!
+         * 
+         * Each pixed will be added as 4 uint8 values to that imageData.data array.
+         * values will be in RGBA order. Get the pixel's brightness.
+         * 
+         */
+        const imageData = ctx.getImageData(0,0,width,height);
+
 
         for(let i = 0; i < pc; i++){
             points[i].draw(ctx, pointCount, points, maxDistThresh);
@@ -158,7 +172,23 @@ export const Renderer = ({
 
     },[])
 
+    useEffect(()=>{
+
+        if(!videoRef.current){
+            return;
+        }
+
+        if(!videoFileBuffer){
+            return;
+        }
+
+        const blob = new Blob([videoFileBuffer]);
+        videoRef.current.src = URL.createObjectURL(blob);
+
+    },[videoRef.current])
+
     return <main className="renderer__main">
+        <video width={width} height={height} ref={videoRef} style={{display:"block"}}controls></video>
         <canvas width={width} height={height} className="renderer__canvas" id="canvas" ref={canvasRef}></canvas>
     </main>
 }

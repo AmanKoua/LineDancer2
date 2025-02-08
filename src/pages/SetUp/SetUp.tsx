@@ -28,6 +28,12 @@ export const SetUp = ({
   ) => {
     e.preventDefault();
 
+    if(videoFileBuffer){
+      // TODO : remove after video file testing!
+      // Testing with video
+      goToPanel(PANELS.RENDERER);
+    }
+
     if (!audioFileBuffer || !videoFileBuffer) {
       alert("missing audio or video file");
       return;
@@ -53,7 +59,7 @@ export const SetUp = ({
       return;
     }
 
-    setInstanceUUID(uuidv4())
+    setInstanceUUID(uuidv4()) // TODO : get instance UUID by browsing directories
     goToPanel(PANELS.RENDERER);
 
   };

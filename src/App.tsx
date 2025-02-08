@@ -5,7 +5,7 @@ import "./App.css";
 import { PANELS } from "./constants";
 
 function App() {
-  const [panel, setPanel] = useState<string>(PANELS.RENDERER);
+  const [panel, setPanel] = useState<string>(PANELS.SET_UP);
 
   const [audioFileBuffer, setAudioFileBuffer] = useState<ArrayBuffer | null>(
     null
