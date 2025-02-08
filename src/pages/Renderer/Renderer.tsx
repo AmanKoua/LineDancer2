@@ -6,6 +6,7 @@ import { ipcRenderer } from "electron";
 
 import "./Renderer.css";
 import { getSerializedPointsData, registerIpcHandler, serializeAndPersistPointData } from "../rendererIpcService";
+import { Point } from "./point";
 
 export const Renderer = ({
     audioFileBuffer,
@@ -54,84 +55,7 @@ export const Renderer = ({
         }
     }
 
-    // ----------------- IPC POC -----------------------
     registerIpcHandler(points, updatePoints);
-    // ----------------- IPC POC -----------------------
-
-    class Point {
-        x: number;
-        y:number;
-        speedX: number;
-        speedY: number;
-
-        constructor(x: number,y: number,speedX: number,speedY: number){
-            this.x = x;
-            this.y = y;
-            this.speedX = speedX;
-            this.speedY = speedY;
-        }
-
-        static constructFromPointData(data: IPoint): Point {
-            return new Point(data.x,data.y,data.speedX,data.speedY);
-        }
-
-        draw(ctx: CanvasRenderingContext2D){
-            ctx.beginPath();
-            ctx.arc(this.x,this.y,1,0,Math.PI * 2);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-
-
-            this.drawLinesToOtherPoints(ctx);
-        }
-
-        drawLinesToOtherPoints(ctx: CanvasRenderingContext2D){
-
-            for(let i = 0; i < pointCount; i++){
-
-                if(this.x === points[i].x && this.y === points[i].y){
-                    continue
-                }
-
-                if(!this.isBelowMaxDistThresh(points[i])){
-                    continue;
-                }
-
-                ctx.beginPath();
-                ctx.moveTo(this.x,this.y);
-                ctx.lineTo(points[i].x, points[i].y);
-                ctx.closePath();
-                ctx.lineWidth = 1;  
-                ctx.stroke();
-
-            }
-
-        }
-
-        isBelowMaxDistThresh(point: Point): boolean {
-            const dx = point.x - this.x;
-            const dy = point.y - this.y;
-            const dist = Math.sqrt((dx*dx) + (dy * dy));
-            return dist < maxDistThresh;
-        }       
-
-        updatePosition(width:number, height:number) {
-            
-            this.x += this.speedX;
-            this.y += this.speedY;
-
-            if(this.x <= 0 || this.x >= width) {
-                this.speedX *= -1;
-            }
-
-            if(this.y <= 0 || this.y >= height){
-                this.speedY *= -1;
-            }
-
-        }
-
-    }
 
     const getPeristedPointData = async (): Promise<boolean> => {
         let dataRetrievalAttempts = 0;
@@ -200,7 +124,7 @@ export const Renderer = ({
         ctx.clearRect(0,0,w,h);
 
         for(let i = 0; i < pc; i++){
-            points[i].draw(ctx);
+            points[i].draw(ctx, pointCount, points, maxDistThresh);
             points[i].updatePosition(w,h);
         }
 
