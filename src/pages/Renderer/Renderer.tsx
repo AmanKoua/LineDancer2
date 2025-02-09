@@ -40,11 +40,15 @@ export const Renderer = ({
   setInstanceUUID,
   goToPanel,
 }: ICorePageProps) => {
+/*
+  NOTE : Works, but cannot initialize points and protobuf in same go. Run once to save points, then next time for protobuf
+*/
+
   // TODO : remove temp initialization values!
-  pointCount = 1500; // TODO : NOTE - Data folder seems to need to be deleted when the pointcount changes (fails otherwise)
+  pointCount = 1000; // TODO : NOTE - Data folder seems to need to be deleted when the pointcount changes (fails otherwise)
   width = 500;
   height = 500;
-  maxDistThresh = 30;
+  maxDistThresh = 20;
   fps = 30; // TODO : revert after testing (to ~30)
   rngSeed = 1360736; // TODO : take rngSeed from setup component. Store RNGseed in data dir
   // instanceUUID = uuidv4();
@@ -205,6 +209,7 @@ export const Renderer = ({
         width,
         height
       );
+
       decodedPointIndicesIdx++;
     }
   };
