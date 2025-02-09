@@ -38,7 +38,7 @@ export const Renderer = ({
   width = 500;
   height = 500;
   maxDistThresh = 30;
-  fps = 20; // TODO : revert after testing (to ~30)
+  fps = 30; // TODO : revert after testing (to ~30)
   rngSeed = 1360736; // TODO : take rngSeed from setup component. Store RNGseed in data dir
   // instanceUUID = uuidv4();
   instanceUUID = "9893b066-a0b3-4583-a749-9f078b1f9cae"; // TODO : take instanceUUID from setup component
@@ -133,7 +133,7 @@ export const Renderer = ({
     ctx.clearRect(0, 0, w, h);
 
     ctxAux.clearRect(0, 0, w, h);
-    ctxAux.drawImage(videoRef.current!, 0, 0); // draws video on top of canvas
+    ctxAux.drawImage(videoRef.current!, 0, 0, width, height); // NOTE : the 4th and 5th arguments determine video scaling, when displaying to the convas.
 
     refreshPointsToDarknessBitmap(pc, ctxAux);
 
@@ -146,7 +146,7 @@ export const Renderer = ({
         maxDistThresh
       );
       points[i].updatePosition(w, h);
-      //   break; // TODO : Stopped here! Next step is to implement custom bitmap.
+        // break; // TODO : Stopped here! Next step is to implement custom bitmap.
     }
 
   };
@@ -170,7 +170,7 @@ export const Renderer = ({
     x: number,
     y: number
   ): boolean => {
-    if (x + 1 > width || y + 1 > height) {
+    if (x + 1 > width || y + 1 > height || x < 0 || y < 0) {
       return false;
     }
 
