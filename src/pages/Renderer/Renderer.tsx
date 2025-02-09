@@ -51,7 +51,7 @@ export const Renderer = ({
   let updatePointsCallCount = 0;
   const pointsDarknessBitmap = new Bitmap(pointCount);
   const linePointIndicesMap = new Map<number, any>(); // key will be a 32 bit int (encodes 2 16 bit ints)
-  let PointIndicesPairsAcrossTimeArr = []; // any[Uint32[]]. Each uint32 represents the point indices for lines, for 1 call of draw() (time tick).
+  let pointLinesArr = []; // any[Uint32[]]. Each uint32 represents the point indices for lines, for 1 call of draw() (time tick).
 
   const updatePoints = (val: IPoint[]) => {
     updatePointsCallCount++;
@@ -159,8 +159,7 @@ export const Renderer = ({
     }
 
     let encodedPointIndicesPairs = Array.from(linePointIndicesMap.keys());
-    PointIndicesPairsAcrossTimeArr.push(encodedPointIndicesPairs); // NOTE : this will most likely become very large!
-
+    pointLinesArr.push(encodedPointIndicesPairs); // NOTE : this will most likely become very large!
   };
 
   const refreshPointsToDarknessBitmap = (
