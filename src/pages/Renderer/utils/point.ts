@@ -25,11 +25,13 @@ export class Point {
     points: Point[],
     maxDistThresh: number
   ) {
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, 1, 0, Math.PI * 2);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
+
+    // NOTE : uncomment to render point locations
+    // ctx.beginPath();
+    // ctx.arc(this.x, this.y, 1, 0, Math.PI * 2);
+    // ctx.closePath();
+    // ctx.fill();
+    // ctx.stroke();
 
     this.drawLinesToOtherPoints(
       pointsDarknessBitmap,
