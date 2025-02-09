@@ -13,7 +13,10 @@ import {
 } from "../rendererIpcService";
 import { Point } from "./utils/point";
 import { Bitmap } from "./utils/bitmap";
-import { ENCODED_POINT_INDICES_PROTO_DEFINITION, Uint32Matrix } from "./constants";
+import {
+  ENCODED_POINT_INDICES_PROTO_DEFINITION,
+  Uint32Matrix,
+} from "./constants";
 
 export const Renderer = ({
   audioFileBuffer,
@@ -56,6 +59,8 @@ export const Renderer = ({
   let updatePointsCallCount = 0;
   const pointsDarknessBitmap = new Bitmap(pointCount);
   const linePointIndicesMap = new Map<number, any>(); // key will be a 32 bit int (encodes 2 16 bit ints)
+  let decodedPointIndicesArr: Uint32Array[] | null = null;
+  let decodedPointIndicesIdx: number = 0;
   let encodedPointIdicesArr: number[][] = []; // Each uint32[][] represents the point indices for lines, for 1 call of draw() (time tick).
   let encodedLineDataBuffer: Buffer<ArrayBufferLike> | null = null;
   let didGetEncodedLineDataBufferFromDisk = false;
@@ -70,12 +75,12 @@ export const Renderer = ({
   };
 
   const updateLinePointIndicesMap = (val: number) => {
-    linePointIndicesMap.set(val, 0)
-  }
+    linePointIndicesMap.set(val, 0);
+  };
 
   const setEncodedLineDataBuffer = (val: Buffer<ArrayBufferLike> | null) => {
     encodedLineDataBuffer = val;
-  }
+  };
 
   registerIpcHandler(points, updatePoints, setEncodedLineDataBuffer);
 
@@ -100,7 +105,8 @@ export const Renderer = ({
   };
 
   const initializePoints = async () => {
-    let didSetPointsFromPersistedData: boolean = await setPointsFromPersistedData();
+    let didSetPointsFromPersistedData: boolean =
+      await setPointsFromPersistedData();
 
     if (didSetPointsFromPersistedData) {
       return;
@@ -125,11 +131,9 @@ export const Renderer = ({
     }
 
     serializeAndPersistPointData(points, instanceUUID);
-
   };
 
   const draw = async () => {
-
     if (points.length == 0) {
       await initializePoints();
     }
@@ -143,35 +147,66 @@ export const Renderer = ({
     }
 
     const ctx: CanvasRenderingContext2D = canvasRef.current.getContext("2d")!;
-    const ctxAux: CanvasRenderingContext2D = canvasRefAux.current.getContext("2d")!;
+    const ctxAux: CanvasRenderingContext2D =
+      canvasRefAux.current.getContext("2d")!;
     const w = width;
     const h = height;
     const pc = pointCount;
 
     ctx.clearRect(0, 0, w, h);
 
-    ctxAux.clearRect(0, 0, w, h);
-    ctxAux.drawImage(videoRef.current!, 0, 0, width, height); // NOTE : the 4th and 5th arguments determine video scaling, when displaying to the convas.
+    if (!didGetEncodedLineDataBufferFromDisk) {
+      ctxAux.clearRect(0, 0, w, h);
+      ctxAux.drawImage(videoRef.current!, 0, 0, width, height); // NOTE : the 4th and 5th arguments determine video scaling, when displaying to the convas.
 
-    refreshPointsToDarknessBitmap(pc, ctxAux);
-    linePointIndicesMap.clear();
+      refreshPointsToDarknessBitmap(pc, ctxAux);
+      linePointIndicesMap.clear();
 
-    for (let i = 0; i < pc; i++) {
-      points[i].draw(
-        pointsDarknessBitmap,
-        ctx,
-        pointCount,
-        points,
-        maxDistThresh,
-        updateLinePointIndicesMap
-      );
-      points[i].updatePosition(w, h);
+      for (let i = 0; i < pc; i++) {
+        points[i].draw(
+          pointsDarknessBitmap,
+          ctx,
+          pointCount,
+          points,
+          maxDistThresh,
+          updateLinePointIndicesMap
+        );
+        points[i].updatePosition(w, h);
         // break;
+      }
+
+      let encodedPointIndicesPairs = Array.from(linePointIndicesMap.keys());
+      encodedPointIdicesArr.push(encodedPointIndicesPairs); // NOTE : this will most likely become very large!
+    } else {
+      if (decodedPointIndicesIdx >= decodedPointIndicesArr!.length) {
+        return;
+      }
+
+      /*
+        NOTE : 
+        Not 100% sure what happened, but the decodedPointIndicesArr is NOT a Uint32Array[].
+        It is assigned as such, but somewhere along the way it's converted to the following type:
+
+        {
+          0: {
+            values: [2646,462642,2426]
+          },
+          1:{
+            ...
+          }
+        }
+
+      */
+
+      Point.drawLinesToOtherPointsFromDiskData(
+        ctx,
+        points,
+        decodedPointIndicesArr![`${decodedPointIndicesIdx}`].values as unknown as  number[], // hacky, but necessary
+        width,
+        height
+      );
+      decodedPointIndicesIdx++;
     }
-
-    let encodedPointIndicesPairs = Array.from(linePointIndicesMap.keys());
-    encodedPointIdicesArr.push(encodedPointIndicesPairs); // NOTE : this will most likely become very large!
-
   };
 
   const refreshPointsToDarknessBitmap = (
@@ -205,10 +240,10 @@ export const Renderer = ({
     let refreshCount = 0;
     getSerializedEncodedLineData(instanceUUID);
 
-    while(refreshCount < 10){
+    while (refreshCount < 10) {
       await sleep(100);
 
-      if(encodedLineDataBuffer){
+      if (encodedLineDataBuffer) {
         return true;
       }
 
@@ -216,30 +251,32 @@ export const Renderer = ({
     }
 
     return false;
-  }
+  };
 
-  const setEncodedPointIdicesArrToDiskData = async () => {
-    // TODO : here!
+  const setDecodedPointIndicesArr = async () => {
     const root = proto.parse(ENCODED_POINT_INDICES_PROTO_DEFINITION).root;
     const uint32Matrix = root.lookupType("Uint32Matrix");
     const decoded = uint32Matrix.decode(encodedLineDataBuffer!);
-    let decodedData = (decoded as unknown as Uint32Matrix);
-    console.log("--------------- decoded row data! -------------------");
-    console.log(decodedData.rows); // Uint32Array[]
-    // encodedPointIdicesArr = decodedData.rows as Uint32Array[][];
-  }
+
+    let decodedData = decoded as unknown as Uint32Matrix;
+    decodedPointIndicesArr = decodedData.rows;
+  };
 
   const startRendering = async () => {
-    if (!canvasRef.current || renderInterval !== undefined || !videoRef.current) {
+    if (
+      !canvasRef.current ||
+      renderInterval !== undefined ||
+      !videoRef.current
+    ) {
       return;
     }
 
-    if(!encodedLineDataBuffer){
+    if (!encodedLineDataBuffer) {
       didGetEncodedLineDataBufferFromDisk = await getEncodedLineDataBuffer();
     }
 
-    if(didGetEncodedLineDataBufferFromDisk){
-      await setEncodedPointIdicesArrToDiskData();
+    if (didGetEncodedLineDataBufferFromDisk) {
+      await setDecodedPointIndicesArr();
     }
 
     videoRef.current.play();
@@ -248,21 +285,20 @@ export const Renderer = ({
       draw();
     }, fps);
 
-    if(!clearRenderInterval){
-      clearRenderInterval = setInterval(()=>{
-        if(videoRef.current?.ended){
+    if (!clearRenderInterval) {
+      clearRenderInterval = setInterval(() => {
+        if (videoRef.current?.ended) {
           handleVideoEnding();
         }
       }, 500);
     }
-
   };
 
-  const handleVideoEnding = async ()=>{
+  const handleVideoEnding = async () => {
     clearInterval(renderInterval);
     clearInterval(clearRenderInterval);
     serializeAndPersistEncodedLineData(encodedPointIdicesArr, instanceUUID);
-  }
+  };
 
   useEffect(() => {
     if (renderInterval) {
