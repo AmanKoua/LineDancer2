@@ -65,7 +65,7 @@ export const registerIpcHandler = (win: BrowserWindow) => {
       });
     
       const doesFileExist = fs.existsSync(`${instanceDataDir}/lineDataProto.bin`);
-      
+
       if(doesFileExist){
         fs.rmSync(`${instanceDataDir}/lineDataProto.bin`)
       }
@@ -74,11 +74,17 @@ export const registerIpcHandler = (win: BrowserWindow) => {
 
   }
 
+  const getEncodedLineDataHandler = (_: any, instanceUUID: string) => {
+    const encodedLineDataBuffer = fs.readFileSync(`./data/${instanceUUID}/lineDataProto.bin`);
+    win!.webContents.send("GET_ENCODED_LINE_DATA_RESPONSE", encodedLineDataBuffer);
+  }
+
   ipcMain.on(
     "SERIALIZE_AND_PERSIST_POINT_DATA",
     serializeAndPersistDataHandler
   );
   ipcMain.on("GET_SERIALIZED_POINTS_DATA", getSerializedPointsDataHandler);
   ipcMain.on("SERIALIZE_AND_PERSIST_ENCODED_LINE_DATA", serializeAndPersistsLineDataHandler);
+  ipcMain.on("GET_ENCODED_LINE_DATA", getEncodedLineDataHandler);
 
 };

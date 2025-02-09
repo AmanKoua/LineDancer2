@@ -5,6 +5,7 @@ import { createSeededRNG, sleep } from "./utils/utils";
 
 import "./Renderer.css";
 import {
+  getSerializedEncodedLineData,
   getSerializedPointsData,
   registerIpcHandler,
   serializeAndPersistEncodedLineData,
@@ -55,6 +56,8 @@ export const Renderer = ({
   const pointsDarknessBitmap = new Bitmap(pointCount);
   const linePointIndicesMap = new Map<number, any>(); // key will be a 32 bit int (encodes 2 16 bit ints)
   let encodedPointIdicesArr: number[][] = []; // Each uint32[][] represents the point indices for lines, for 1 call of draw() (time tick).
+  let encodedLineDataBuffer: Buffer<ArrayBufferLike> | undefined = undefined;
+  let didGetEncodedLineDataBufferFromDisk = false;
 
   const updatePoints = (val: IPoint[]) => {
     updatePointsCallCount++;
@@ -69,7 +72,11 @@ export const Renderer = ({
     linePointIndicesMap.set(val, 0)
   }
 
-  registerIpcHandler(points, updatePoints);
+  const setEncodedLineDataBuffer = (val: Buffer<ArrayBufferLike>) => {
+    encodedLineDataBuffer = val;
+  }
+
+  registerIpcHandler(points, updatePoints, setEncodedLineDataBuffer);
 
   const setPointsFromPersistedData = async (): Promise<boolean> => {
     let dataRetrievalAttempts = 0;
@@ -193,9 +200,38 @@ export const Renderer = ({
     return imageData.data[0] + imageData.data[1] + imageData.data[2] < 30;
   };
 
-  const startRendering = () => {
+  const getEncodedLineDataBuffer = async (): Promise<boolean> => {
+    let refreshCount = 0;
+    getSerializedEncodedLineData(instanceUUID);
+
+    while(refreshCount < 10){
+      await sleep(100);
+
+      if(encodedLineDataBuffer){
+        return true;
+      }
+
+      refreshCount++;
+    }
+
+    return false;
+  }
+
+  const setEncodedPointIdicesArrToDiskData = async () => {
+    
+  }
+
+  const startRendering = async () => {
     if (!canvasRef.current || renderInterval !== undefined || !videoRef.current) {
       return;
+    }
+
+    if(!encodedLineDataBuffer){
+      didGetEncodedLineDataBufferFromDisk = await getEncodedLineDataBuffer();
+    }
+
+    if(didGetEncodedLineDataBufferFromDisk){
+      await setEncodedPointIdicesArrToDiskData();
     }
 
     videoRef.current.play();
