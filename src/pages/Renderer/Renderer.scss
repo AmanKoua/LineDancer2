@@ -7,8 +7,9 @@
     min-height: 100vh;
 
     .renderer__video {
-        display: block;
-        margin:auto;
+        visibility: hidden; // runs more efficiently, when it doesen't need to render the video
+        position: absolute;
+        // display: block;
     }
 
     .renderer__canvas{
@@ -17,8 +18,10 @@
     }
 
     .renderer__canvas__aux {
+        visibility: hidden; // runs more efficiently, when it doesen't need to render the aux canvas
+        position: absolute;
         // border:1px solid red;
-        margin:auto;
+        // margin:auto;
     }
 
 }
