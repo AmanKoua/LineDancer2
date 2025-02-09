@@ -212,7 +212,6 @@ export const Renderer = ({
 
   };
 
-
   useEffect(() => {
     if (renderInterval) {
       return;
