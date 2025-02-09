@@ -9,6 +9,7 @@ import {
   serializeAndPersistPointData,
 } from "../rendererIpcService";
 import { Point } from "./utils/point";
+import { Bitmap } from "./utils/bitmap";
 
 export const Renderer = ({
   audioFileBuffer,
@@ -33,11 +34,11 @@ export const Renderer = ({
   goToPanel,
 }: ICorePageProps) => {
   // TODO : remove temp initialization values!
-  pointCount = 300;
+  pointCount = 1500; // TODO : NOTE - Data folder seems to need to be deleted when the pointcount changes (fails otherwise)
   width = 500;
   height = 500;
   maxDistThresh = 30;
-  fps = 1000; // TODO : revert after testing (to ~30)
+  fps = 20; // TODO : revert after testing (to ~30)
   rngSeed = 1360736; // TODO : take rngSeed from setup component. Store RNGseed in data dir
   // instanceUUID = uuidv4();
   instanceUUID = "9893b066-a0b3-4583-a749-9f078b1f9cae"; // TODO : take instanceUUID from setup component
@@ -46,6 +47,7 @@ export const Renderer = ({
   let canvasRefAux = useRef<HTMLCanvasElement>(null);
   let videoRef = useRef<HTMLVideoElement>(null);
   let renderInterval: NodeJS.Timeout | undefined = undefined;
+  const pointsDarknessBitmap = new Bitmap(pointCount);
   let points: Point[] = [];
   let updatePointsCallCount = 0;
 
@@ -108,8 +110,13 @@ export const Renderer = ({
   };
 
   const draw = async () => {
+
     if (points.length == 0) {
       await initializePoints();
+    }
+
+    if (points.length < pointCount - 1) {
+      return;
     }
 
     if (!canvasRef.current || !canvasRefAux.current) {
@@ -128,11 +135,33 @@ export const Renderer = ({
     ctxAux.clearRect(0, 0, w, h);
     ctxAux.drawImage(videoRef.current!, 0, 0); // draws video on top of canvas
 
+    refreshPointsToDarknessBitmap(pc, ctxAux);
+
     for (let i = 0; i < pc; i++) {
-      const isPixelInDarkSpace = getIsPixelInDarkSpace(ctxAux, points[i].x, points[i].y);
-      points[i].draw(ctx, pointCount, points, maxDistThresh);
+      points[i].draw(
+        pointsDarknessBitmap,
+        ctx,
+        pointCount,
+        points,
+        maxDistThresh
+      );
       points[i].updatePosition(w, h);
-      break; // TODO : Stopped here! Next step is to implement custom bitmap.
+      //   break; // TODO : Stopped here! Next step is to implement custom bitmap.
+    }
+
+  };
+
+  const refreshPointsToDarknessBitmap = (
+    pc: number,
+    ctxAux: CanvasRenderingContext2D
+  ) => {
+    for (let i = 0; i < pc; i++) {
+      const isPixelInDarkSpace = getIsPixelInDarkSpace(
+        ctxAux,
+        points[i].x,
+        points[i].y
+      );
+      pointsDarknessBitmap.setBitValue(i, isPixelInDarkSpace);
     }
   };
 

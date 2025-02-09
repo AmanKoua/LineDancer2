@@ -1,4 +1,5 @@
 import { IPoint } from "../../../types";
+import { Bitmap } from "./bitmap";
 
 export class Point {
   x: number;
@@ -17,23 +18,52 @@ export class Point {
     return new Point(data.x, data.y, data.speedX, data.speedY);
   }
 
-  draw(ctx: CanvasRenderingContext2D, pointCount: number, points: Point[], maxDistThresh: number) {
+  draw(
+    pointsDarknessBitmap: Bitmap,
+    ctx: CanvasRenderingContext2D,
+    pointCount: number,
+    points: Point[],
+    maxDistThresh: number
+  ) {
     ctx.beginPath();
     ctx.arc(this.x, this.y, 1, 0, Math.PI * 2);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
 
-    this.drawLinesToOtherPoints(ctx, pointCount, points, maxDistThresh);
+    this.drawLinesToOtherPoints(
+      pointsDarknessBitmap,
+      ctx,
+      pointCount,
+      points,
+      maxDistThresh
+    );
   }
 
-  drawLinesToOtherPoints(ctx: CanvasRenderingContext2D, pointCount: number, points: Point[], maxDistThresh: number) {
+  drawLinesToOtherPoints(
+    pointsDarknessBitmap: Bitmap,
+    ctx: CanvasRenderingContext2D,
+    pointCount: number,
+    points: Point[],
+    maxDistThresh: number
+  ) {
     for (let i = 0; i < pointCount; i++) {
-      if (this.x === points[i].x && this.y === points[i].y) {
+
+      const isSelf = this.x === points[i].x && this.y === points[i].y;
+
+      if (isSelf) {
         continue;
       }
 
-      if (!this.isBelowMaxDistThresh(points[i], maxDistThresh)) {
+      const IsBelowMaxDistThresh = !this.getIsBelowMaxDistThresh(points[i], maxDistThresh)
+
+      if (IsBelowMaxDistThresh) {
+        continue;
+      }
+
+      const isPixelInDarkArea = pointsDarknessBitmap.getBitValue(i);
+
+      if(!isPixelInDarkArea){
         continue;
       }
 
@@ -46,7 +76,7 @@ export class Point {
     }
   }
 
-  isBelowMaxDistThresh(point: Point, maxDistThresh: number): boolean {
+  getIsBelowMaxDistThresh(point: Point, maxDistThresh: number): boolean {
     const dx = point.x - this.x;
     const dy = point.y - this.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
