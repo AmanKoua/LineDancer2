@@ -75,8 +75,21 @@ export const registerIpcHandler = (win: BrowserWindow) => {
   }
 
   const getEncodedLineDataHandler = (_: any, instanceUUID: string) => {
-    const encodedLineDataBuffer = fs.readFileSync(`./data/${instanceUUID}/lineDataProto.bin`);
-    win!.webContents.send("GET_ENCODED_LINE_DATA_RESPONSE", encodedLineDataBuffer);
+
+    try {
+      const doesBufferExist = fs.existsSync(`./data/${instanceUUID}/lineDataProto.bin`);
+
+      if(!doesBufferExist){
+        win!.webContents.send("GET_ENCODED_LINE_DATA_RESPONSE", null);
+        return;
+      }
+
+      const encodedLineDataBuffer = fs.readFileSync(`./data/${instanceUUID}/lineDataProto.bin`);
+      win!.webContents.send("GET_ENCODED_LINE_DATA_RESPONSE", encodedLineDataBuffer);
+    } catch(e){
+      console.log(e);
+    }
+
   }
 
   ipcMain.on(

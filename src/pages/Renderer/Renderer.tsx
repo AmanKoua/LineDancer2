@@ -13,6 +13,7 @@ import {
 } from "../rendererIpcService";
 import { Point } from "./utils/point";
 import { Bitmap } from "./utils/bitmap";
+import { ENCODED_POINT_INDICES_PROTO_DEFINITION, Uint32Matrix } from "./constants";
 
 export const Renderer = ({
   audioFileBuffer,
@@ -56,7 +57,7 @@ export const Renderer = ({
   const pointsDarknessBitmap = new Bitmap(pointCount);
   const linePointIndicesMap = new Map<number, any>(); // key will be a 32 bit int (encodes 2 16 bit ints)
   let encodedPointIdicesArr: number[][] = []; // Each uint32[][] represents the point indices for lines, for 1 call of draw() (time tick).
-  let encodedLineDataBuffer: Buffer<ArrayBufferLike> | undefined = undefined;
+  let encodedLineDataBuffer: Buffer<ArrayBufferLike> | null = null;
   let didGetEncodedLineDataBufferFromDisk = false;
 
   const updatePoints = (val: IPoint[]) => {
@@ -72,7 +73,7 @@ export const Renderer = ({
     linePointIndicesMap.set(val, 0)
   }
 
-  const setEncodedLineDataBuffer = (val: Buffer<ArrayBufferLike>) => {
+  const setEncodedLineDataBuffer = (val: Buffer<ArrayBufferLike> | null) => {
     encodedLineDataBuffer = val;
   }
 
@@ -218,7 +219,14 @@ export const Renderer = ({
   }
 
   const setEncodedPointIdicesArrToDiskData = async () => {
-    
+    // TODO : here!
+    const root = proto.parse(ENCODED_POINT_INDICES_PROTO_DEFINITION).root;
+    const uint32Matrix = root.lookupType("Uint32Matrix");
+    const decoded = uint32Matrix.decode(encodedLineDataBuffer!);
+    let decodedData = (decoded as unknown as Uint32Matrix);
+    console.log("--------------- decoded row data! -------------------");
+    console.log(decodedData.rows); // Uint32Array[]
+    // encodedPointIdicesArr = decodedData.rows as Uint32Array[][];
   }
 
   const startRendering = async () => {

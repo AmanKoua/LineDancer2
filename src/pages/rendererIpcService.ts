@@ -6,7 +6,7 @@ const ipcSend = window.ipcRenderer.send;
 export const registerIpcHandler = (
   points: IPoint[],
   updatePoints: (val: IPoint[]) => void,
-  setEncodedLineDataBuffer: (val: Buffer<ArrayBufferLike>) => void,
+  setEncodedLineDataBuffer: (val: Buffer<ArrayBufferLike> | null) => void,
 ) => {
   const serailizeAndPersistPointDataResponseHandler = () => {
     console.log("Persisted points...");
@@ -20,7 +20,7 @@ export const registerIpcHandler = (
     updatePoints(JSON.parse(data));
   };
 
-  const getEncodedLineDataResponseHandler = (_: any, encodedLineDataBuffer: Buffer<ArrayBufferLike>) => {
+  const getEncodedLineDataResponseHandler = (_: any, encodedLineDataBuffer: Buffer<ArrayBufferLike> | null) => {
     setEncodedLineDataBuffer(encodedLineDataBuffer);
   }
 
