@@ -25,3 +25,7 @@ export const serializeAndPersistPointData = (points: IPoint[], instanceUUID: str
     ipcSend("SERIALIZE_AND_PERSIST_POINT_DATA", JSON.stringify(points), instanceUUID);
 }
 
+export const serializeAndPersistEncodedLineData = (encodedPointIdicesArr: number[][], instanceUUID: string) => {
+    ipcSend("SERIALIZE_AND_PERSIST_ENCODED_LINE_DATA", encodedPointIdicesArr, instanceUUID);
+}
+

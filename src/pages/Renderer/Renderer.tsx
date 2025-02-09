@@ -7,6 +7,7 @@ import "./Renderer.css";
 import {
   getSerializedPointsData,
   registerIpcHandler,
+  serializeAndPersistEncodedLineData,
   serializeAndPersistPointData,
 } from "../rendererIpcService";
 import { Point } from "./utils/point";
@@ -216,34 +217,34 @@ export const Renderer = ({
   const handleVideoEnding = async ()=>{
     clearInterval(renderInterval);
     clearInterval(clearRenderInterval);
+    serializeAndPersistEncodedLineData(encodedPointIdicesArr, instanceUUID);
 
     // TODO : finished here! send buffer to main process, and persist in data folder (under uuid)
     // I don't think you can call proto.load from the render process :/
 
+    // console.log(__dirname + "/utils/encodedPointIndices.proto");
+    // const root = await proto.load( __dirname + "/utils/encodedPointIndices.proto");
+    // const uint32Matrix = root.lookupType("Uint32Matrix");
+    // const uint32Array = root.lookupType("Uint32Array");
 
-    console.log(__dirname + "/utils/encodedPointIndices.proto");
-    const root = await proto.load( __dirname + "/utils/encodedPointIndices.proto");
-    const uint32Matrix = root.lookupType("Uint32Matrix");
-    const uint32Array = root.lookupType("Uint32Array");
+    // const matrixData = {
+    //   rows: [] as any //  {values : [1,3,4]}
+    // };
 
-    const matrixData = {
-      rows: [] as any //  {values : [1,3,4]}
-    };
+    // for(let i = 0; i < encodedPointIdicesArr.length; i++) {
+    //   matrixData.rows.push({values : encodedPointIdicesArr[i]});
+    // }
 
-    for(let i = 0; i < encodedPointIdicesArr.length; i++) {
-      matrixData.rows.push({values : encodedPointIdicesArr[i]});
-    }
+    // const errMsg = uint32Matrix.verify(matrixData);
 
-    const errMsg = uint32Matrix.verify(matrixData);
+    // if(errMsg){
+    //   console.log("------------------ err message for protobuf -----------------------");
+    //   console.log(errMsg);
+    // }
 
-    if(errMsg){
-      console.log("------------------ err message for protobuf -----------------------");
-      console.log(errMsg);
-    }
-
-    const buffer = uint32Matrix.encode(uint32Matrix.create(matrixData)).finish();
-    console.log("------------------ encoded buffer! -----------------------");
-    console.log("Encoded Buffer:", buffer);
+    // const buffer = uint32Matrix.encode(uint32Matrix.create(matrixData)).finish();
+    // console.log("------------------ encoded buffer! -----------------------");
+    // console.log("Encoded Buffer:", buffer);
 
     // TODO : finished here! send buffer to main process, and persist in data folder (under uuid)
 

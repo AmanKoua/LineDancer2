@@ -1,4 +1,4 @@
-syntax = "proto3"
+syntax = "proto3";
 
 message Uint32Array {
     repeated uint32 values = 1; // A single array of Uint32 values
