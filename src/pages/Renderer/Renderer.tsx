@@ -47,6 +47,7 @@ export const Renderer = ({
   let canvasRefAux = useRef<HTMLCanvasElement>(null);
   let videoRef = useRef<HTMLVideoElement>(null);
   let renderInterval: NodeJS.Timeout | undefined = undefined;
+  let clearRenderInterval: NodeJS.Timeout | undefined = undefined;
   let points: Point[] = [];
   let updatePointsCallCount = 0;
   const pointsDarknessBitmap = new Bitmap(pointCount);
@@ -190,14 +191,27 @@ export const Renderer = ({
   };
 
   const startRendering = () => {
-    if (!canvasRef.current || renderInterval !== undefined) {
+    if (!canvasRef.current || renderInterval !== undefined || !videoRef.current) {
       return;
     }
+
+    videoRef.current.play();
 
     renderInterval = setInterval(() => {
       draw();
     }, fps);
+
+    if(!clearRenderInterval){
+      clearRenderInterval = setInterval(()=>{
+        if(videoRef.current?.ended){
+          clearInterval(renderInterval);
+          clearInterval(clearRenderInterval);
+        }
+      }, 500);
+    }
+
   };
+
 
   useEffect(() => {
     if (renderInterval) {
