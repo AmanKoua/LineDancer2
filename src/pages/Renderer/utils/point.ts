@@ -6,16 +6,18 @@ export class Point {
   y: number;
   speedX: number;
   speedY: number;
+  selfArrIdx: number;
 
-  constructor(x: number, y: number, speedX: number, speedY: number) {
+  constructor(x: number, y: number, speedX: number, speedY: number, selfArrIdx: number) {
     this.x = x;
     this.y = y;
     this.speedX = speedX;
     this.speedY = speedY;
+    this.selfArrIdx = selfArrIdx;
   }
 
-  static constructFromPointData(data: IPoint): Point {
-    return new Point(data.x, data.y, data.speedX, data.speedY);
+  static constructFromPointData(data: IPoint, selfArrIdx: number): Point {
+    return new Point(data.x, data.y, data.speedX, data.speedY, selfArrIdx);
   }
 
   draw(
@@ -23,7 +25,8 @@ export class Point {
     ctx: CanvasRenderingContext2D,
     pointCount: number,
     points: Point[],
-    maxDistThresh: number
+    maxDistThresh: number,
+    updateLinePointIndicesMap: (val: number) => void,
   ) {
 
     // NOTE : uncomment to render point locations
@@ -38,7 +41,8 @@ export class Point {
       ctx,
       pointCount,
       points,
-      maxDistThresh
+      maxDistThresh,
+      updateLinePointIndicesMap
     );
   }
 
@@ -47,7 +51,8 @@ export class Point {
     ctx: CanvasRenderingContext2D,
     pointCount: number,
     points: Point[],
-    maxDistThresh: number
+    maxDistThresh: number,
+    updateLinePointIndicesMap: (val: number) => void,
   ) {
     for (let i = 0; i < pointCount; i++) {
 
@@ -69,6 +74,8 @@ export class Point {
         continue;
       }
 
+      this.addPointPairToLinePointIndicesMap(i, updateLinePointIndicesMap);
+
       ctx.beginPath();
       ctx.moveTo(this.x, this.y);
       ctx.lineTo(points[i].x, points[i].y);
@@ -76,6 +83,21 @@ export class Point {
       ctx.lineWidth = 1;
       ctx.stroke();
     }
+  }
+
+  /**
+   * The index that is set as a key in this map, will be used to encode 2 16 bit uint values (32 bit uint key).
+   * The map value is not important. The 1st 16 bits encodes the 1dx of the 1st point's array idx, and the 2nd 16 bits
+   * encodes the 2nd point's array idx. map entry value is IRRELEVENT (encodes no data).
+   */
+  addPointPairToLinePointIndicesMap = (otherIdx: number, updateLinePointIndicesMap: (val: number) => void) => {
+    const firstIdx = this.selfArrIdx < otherIdx ? this.selfArrIdx : otherIdx;
+    const secondIdx = this.selfArrIdx > otherIdx ? this.selfArrIdx : otherIdx;
+    let indexKey = 0x00000000; // forces creation of uint32
+
+    indexKey |= (firstIdx << 16);
+    indexKey |= secondIdx;
+    updateLinePointIndicesMap(indexKey);
   }
 
   getIsBelowMaxDistThresh(point: Point, maxDistThresh: number): boolean {

@@ -47,18 +47,24 @@ export const Renderer = ({
   let canvasRefAux = useRef<HTMLCanvasElement>(null);
   let videoRef = useRef<HTMLVideoElement>(null);
   let renderInterval: NodeJS.Timeout | undefined = undefined;
-  const pointsDarknessBitmap = new Bitmap(pointCount);
   let points: Point[] = [];
   let updatePointsCallCount = 0;
+  const pointsDarknessBitmap = new Bitmap(pointCount);
+  const linePointIndicesMap = new Map<number, any>(); // key will be a 32 bit int (encodes 2 16 bit ints)
+  let PointIndicesPairsAcrossTimeArr = []; // any[Uint32[]]. Each uint32 represents the point indices for lines, for 1 call of draw() (time tick).
 
   const updatePoints = (val: IPoint[]) => {
     updatePointsCallCount++;
     points = [];
 
     for (let i = 0; i < val.length; i++) {
-      points.push(Point.constructFromPointData(val[i]));
+      points.push(Point.constructFromPointData(val[i], i));
     }
   };
+
+  const updateLinePointIndicesMap = (val: number) => {
+    linePointIndicesMap.set(val, 0)
+  }
 
   registerIpcHandler(points, updatePoints);
 
@@ -101,13 +107,14 @@ export const Renderer = ({
           Math.floor(rng() * w),
           Math.floor(rng() * h),
           rng() * 3 + 1,
-          rng() * 3 + 1
+          rng() * 3 + 1,
+          i
         )
       );
     }
 
     serializeAndPersistPointData(points, instanceUUID);
-    
+
   };
 
   const draw = async () => {
@@ -125,8 +132,7 @@ export const Renderer = ({
     }
 
     const ctx: CanvasRenderingContext2D = canvasRef.current.getContext("2d")!;
-    const ctxAux: CanvasRenderingContext2D =
-      canvasRefAux.current.getContext("2d")!;
+    const ctxAux: CanvasRenderingContext2D = canvasRefAux.current.getContext("2d")!;
     const w = width;
     const h = height;
     const pc = pointCount;
@@ -137,6 +143,7 @@ export const Renderer = ({
     ctxAux.drawImage(videoRef.current!, 0, 0, width, height); // NOTE : the 4th and 5th arguments determine video scaling, when displaying to the convas.
 
     refreshPointsToDarknessBitmap(pc, ctxAux);
+    linePointIndicesMap.clear();
 
     for (let i = 0; i < pc; i++) {
       points[i].draw(
@@ -144,11 +151,15 @@ export const Renderer = ({
         ctx,
         pointCount,
         points,
-        maxDistThresh
+        maxDistThresh,
+        updateLinePointIndicesMap
       );
       points[i].updatePosition(w, h);
         // break;
     }
+
+    let encodedPointIndicesPairs = Array.from(linePointIndicesMap.keys());
+    PointIndicesPairsAcrossTimeArr.push(encodedPointIndicesPairs); // NOTE : this will most likely become very large!
 
   };
 
