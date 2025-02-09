@@ -1,0 +1,9 @@
+syntax = "proto3"
+
+message Uint32Array {
+    repeated uint32 values = 1; // A single array of Uint32 values
+}
+
+message Uint32Matrix {
+    repeated Uint32Array rows = 1; // An array of Uint32Array
+}

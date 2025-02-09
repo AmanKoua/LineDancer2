@@ -1,5 +1,6 @@
 import { ICorePageProps, IPoint } from "../../types";
 import { useRef, useEffect } from "react";
+import * as proto from "protobufjs";
 import { createSeededRNG, sleep } from "./utils/utils";
 
 import "./Renderer.css";
@@ -52,7 +53,7 @@ export const Renderer = ({
   let updatePointsCallCount = 0;
   const pointsDarknessBitmap = new Bitmap(pointCount);
   const linePointIndicesMap = new Map<number, any>(); // key will be a 32 bit int (encodes 2 16 bit ints)
-  let pointLinesArr = []; // any[Uint32[]]. Each uint32 represents the point indices for lines, for 1 call of draw() (time tick).
+  let encodedPointIdicesArr: number[][] = []; // Each uint32[][] represents the point indices for lines, for 1 call of draw() (time tick).
 
   const updatePoints = (val: IPoint[]) => {
     updatePointsCallCount++;
@@ -160,7 +161,8 @@ export const Renderer = ({
     }
 
     let encodedPointIndicesPairs = Array.from(linePointIndicesMap.keys());
-    pointLinesArr.push(encodedPointIndicesPairs); // NOTE : this will most likely become very large!
+    encodedPointIdicesArr.push(encodedPointIndicesPairs); // NOTE : this will most likely become very large!
+
   };
 
   const refreshPointsToDarknessBitmap = (
@@ -204,13 +206,48 @@ export const Renderer = ({
     if(!clearRenderInterval){
       clearRenderInterval = setInterval(()=>{
         if(videoRef.current?.ended){
-          clearInterval(renderInterval);
-          clearInterval(clearRenderInterval);
+          handleVideoEnding();
         }
       }, 500);
     }
 
   };
+
+  const handleVideoEnding = async ()=>{
+    clearInterval(renderInterval);
+    clearInterval(clearRenderInterval);
+
+    // TODO : finished here! send buffer to main process, and persist in data folder (under uuid)
+    // I don't think you can call proto.load from the render process :/
+
+
+    console.log(__dirname + "/utils/encodedPointIndices.proto");
+    const root = await proto.load( __dirname + "/utils/encodedPointIndices.proto");
+    const uint32Matrix = root.lookupType("Uint32Matrix");
+    const uint32Array = root.lookupType("Uint32Array");
+
+    const matrixData = {
+      rows: [] as any //  {values : [1,3,4]}
+    };
+
+    for(let i = 0; i < encodedPointIdicesArr.length; i++) {
+      matrixData.rows.push({values : encodedPointIdicesArr[i]});
+    }
+
+    const errMsg = uint32Matrix.verify(matrixData);
+
+    if(errMsg){
+      console.log("------------------ err message for protobuf -----------------------");
+      console.log(errMsg);
+    }
+
+    const buffer = uint32Matrix.encode(uint32Matrix.create(matrixData)).finish();
+    console.log("------------------ encoded buffer! -----------------------");
+    console.log("Encoded Buffer:", buffer);
+
+    // TODO : finished here! send buffer to main process, and persist in data folder (under uuid)
+
+  }
 
   useEffect(() => {
     if (renderInterval) {
