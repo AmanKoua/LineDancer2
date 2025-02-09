@@ -62,7 +62,7 @@ export const Renderer = ({
 
   registerIpcHandler(points, updatePoints);
 
-  const getPeristedPointData = async (): Promise<boolean> => {
+  const setPointsFromPersistedData = async (): Promise<boolean> => {
     let dataRetrievalAttempts = 0;
 
     while (dataRetrievalAttempts < 3) {
@@ -83,9 +83,9 @@ export const Renderer = ({
   };
 
   const initializePoints = async () => {
-    let didGetPersistedPointsData: boolean = await getPeristedPointData();
+    let didSetPointsFromPersistedData: boolean = await setPointsFromPersistedData();
 
-    if (didGetPersistedPointsData) {
+    if (didSetPointsFromPersistedData) {
       return;
     }
 
@@ -107,6 +107,7 @@ export const Renderer = ({
     }
 
     serializeAndPersistPointData(points, instanceUUID);
+    
   };
 
   const draw = async () => {
@@ -146,7 +147,7 @@ export const Renderer = ({
         maxDistThresh
       );
       points[i].updatePosition(w, h);
-        // break; // TODO : Stopped here! Next step is to implement custom bitmap.
+        // break;
     }
 
   };
