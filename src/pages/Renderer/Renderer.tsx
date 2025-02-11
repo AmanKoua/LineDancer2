@@ -40,7 +40,7 @@ export const Renderer = ({
   setInstanceUUID,
   goToPanel,
 }: ICorePageProps) => {
-/*
+  /*
   NOTE : Works, but cannot initialize points and protobuf in same go. Run once to save points, then next time for protobuf
 */
 
@@ -49,13 +49,15 @@ export const Renderer = ({
   width = 500;
   height = 500;
   maxDistThresh = 20;
-  fps = 30; // TODO : revert after testing (to ~30)
+  fps = 200; // TODO : revert after testing (to ~30)
   rngSeed = 1360736; // TODO : take rngSeed from setup component. Store RNGseed in data dir
   // instanceUUID = uuidv4();
   instanceUUID = "9893b066-a0b3-4583-a749-9f078b1f9cae"; // TODO : take instanceUUID from setup component
 
   let canvasRef = useRef<HTMLCanvasElement>(null);
   let canvasRefAux = useRef<HTMLCanvasElement>(null);
+  let ctx: CanvasRenderingContext2D | undefined = undefined;
+  let ctxAux: CanvasRenderingContext2D | undefined = undefined;
   let videoRef = useRef<HTMLVideoElement>(null);
   let renderInterval: NodeJS.Timeout | undefined = undefined;
   let clearRenderInterval: NodeJS.Timeout | undefined = undefined;
@@ -135,6 +137,8 @@ export const Renderer = ({
     }
 
     serializeAndPersistPointData(points, instanceUUID);
+
+    await sleep(500);
   };
 
   const draw = async () => {
@@ -150,9 +154,11 @@ export const Renderer = ({
       return;
     }
 
-    const ctx: CanvasRenderingContext2D = canvasRef.current.getContext("2d")!;
-    const ctxAux: CanvasRenderingContext2D =
-      canvasRefAux.current.getContext("2d")!;
+    if (!ctx || !ctxAux) {
+      ctx = canvasRef.current.getContext("2d")!;
+      ctxAux = canvasRefAux.current.getContext("2d")!;
+    }
+
     const w = width;
     const h = height;
     const pc = pointCount;
@@ -175,8 +181,10 @@ export const Renderer = ({
           maxDistThresh,
           updateLinePointIndicesMap
         );
+      }
+
+      for (let i = 0; i < pc; i++) {
         points[i].updatePosition(w, h);
-        // break;
       }
 
       let encodedPointIndicesPairs = Array.from(linePointIndicesMap.keys());
@@ -205,7 +213,8 @@ export const Renderer = ({
       Point.drawLinesToOtherPointsFromDiskData(
         ctx,
         points,
-        decodedPointIndicesArr![`${decodedPointIndicesIdx}`].values as unknown as  number[], // hacky, but necessary
+        decodedPointIndicesArr![`${decodedPointIndicesIdx}`]
+          .values as unknown as number[], // hacky, but necessary
         width,
         height
       );
@@ -339,7 +348,7 @@ export const Renderer = ({
         height={height}
         ref={videoRef}
         className="renderer__video"
-        controls
+        preload="auto"
         muted={true}
       ></video>
       <canvas

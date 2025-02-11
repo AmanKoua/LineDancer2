@@ -62,7 +62,7 @@ export class Point {
     // ctx.closePath();
     // ctx.fill();
     // ctx.stroke();
-    this.drawLinesToOtherPointsFromDiskData(ctx, pointCount, points);
+    // Point.drawLinesToOtherPointsFromDiskData(ctx, pointCount, points);
   }
 
   drawLinesToOtherPoints(
