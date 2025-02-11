@@ -48,7 +48,7 @@ export const Renderer = ({
   pointCount = 1000; // TODO : NOTE - Data folder seems to need to be deleted when the pointcount changes (fails otherwise)
   width = 500;
   height = 500;
-  maxDistThresh = 20;
+  maxDistThresh = 30;
   fps = 30; // TODO : revert after testing (to ~30)
   rngSeed = 1360736; // TODO : take rngSeed from setup component. Store RNGseed in data dir
   // instanceUUID = uuidv4();
@@ -71,6 +71,7 @@ export const Renderer = ({
   let encodedLineDataBuffer: Buffer<ArrayBufferLike> | null = null;
   let didGetEncodedLineDataBufferFromDisk = false;
   let didSetPointsFromPersistedData: boolean = false;
+  let hasCalledGetSerializedEncodedLineData: boolean = false;
 
   const updatePoints = (val: IPoint[]) => {
     updatePointsCallCount++;
@@ -230,8 +231,16 @@ export const Renderer = ({
         height
       );
 
-      decodedPointIndicesIdx++;
     }
+
+    /*
+      NOTE : this fixes the bug where the lines drawn from protobufs are offset. The root cause is that 
+      the isFirstPass boolean is 'true' for ~15 calls to draw(), which then flips to false. After flipping
+      to false, the points will have moved, but the decodedPointIndicesIdx would still be at index 0 of the
+      serialized protobuf data (if 'decodedPointIndicesIdx++' is executed within the else block above).
+    */
+    decodedPointIndicesIdx++; 
+
   };
 
   const refreshPointsToDarknessBitmap = (
@@ -262,8 +271,10 @@ export const Renderer = ({
   };
 
   const getEncodedLineDataBuffer = async (): Promise<boolean> => {
+
     let refreshCount = 0;
     getSerializedEncodedLineData(instanceUUID);
+    hasCalledGetSerializedEncodedLineData = true;
 
     while (refreshCount < 10) {
       await sleep(100);
@@ -296,7 +307,7 @@ export const Renderer = ({
       return;
     }
 
-    if (!encodedLineDataBuffer) {
+    if (!encodedLineDataBuffer && !hasCalledGetSerializedEncodedLineData) {
       didGetEncodedLineDataBufferFromDisk = await getEncodedLineDataBuffer();
     }
 
