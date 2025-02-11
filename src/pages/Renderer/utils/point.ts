@@ -26,6 +26,39 @@ export class Point {
     return new Point(data.x, data.y, data.speedX, data.speedY, selfArrIdx);
   }
 
+  drawWithoutRendering(
+    pointsDarknessBitmap: Bitmap,
+    pointCount: number,
+    points: Point[],
+    maxDistThresh: number,
+    updateLinePointIndicesMap: (val: number) => void
+  ){
+    for (let i = 0; i < pointCount; i++) {
+      const isSelf = this.x === points[i].x && this.y === points[i].y;
+
+      if (isSelf) {
+        continue;
+      }
+
+      const IsBelowMaxDistThresh = !this.getIsBelowMaxDistThresh(
+        points[i],
+        maxDistThresh
+      );
+
+      if (IsBelowMaxDistThresh) {
+        continue;
+      }
+
+      const isPixelInDarkArea = pointsDarknessBitmap.getBitValue(i);
+
+      if (!isPixelInDarkArea) {
+        continue;
+      }
+
+      this.addPointPairToLinePointIndicesMap(i, updateLinePointIndicesMap);
+    }
+  }
+
   draw(
     pointsDarknessBitmap: Bitmap,
     ctx: CanvasRenderingContext2D,

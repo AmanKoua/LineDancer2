@@ -49,7 +49,7 @@ export const Renderer = ({
   width = 500;
   height = 500;
   maxDistThresh = 20;
-  fps = 200; // TODO : revert after testing (to ~30)
+  fps = 30; // TODO : revert after testing (to ~30)
   rngSeed = 1360736; // TODO : take rngSeed from setup component. Store RNGseed in data dir
   // instanceUUID = uuidv4();
   instanceUUID = "9893b066-a0b3-4583-a749-9f078b1f9cae"; // TODO : take instanceUUID from setup component
@@ -63,13 +63,14 @@ export const Renderer = ({
   let clearRenderInterval: NodeJS.Timeout | undefined = undefined;
   let points: Point[] = [];
   let updatePointsCallCount = 0;
-  const pointsDarknessBitmap = new Bitmap(pointCount);
+  const pointsIndicesInDarknessBitmap = new Bitmap(pointCount);
   const linePointIndicesMap = new Map<number, any>(); // key will be a 32 bit int (encodes 2 16 bit ints)
   let decodedPointIndicesArr: Uint32Array[] | null = null;
   let decodedPointIndicesIdx: number = 0;
   let encodedPointIdicesArr: number[][] = []; // Each uint32[][] represents the point indices for lines, for 1 call of draw() (time tick).
   let encodedLineDataBuffer: Buffer<ArrayBufferLike> | null = null;
   let didGetEncodedLineDataBufferFromDisk = false;
+  let didSetPointsFromPersistedData: boolean = false;
 
   const updatePoints = (val: IPoint[]) => {
     updatePointsCallCount++;
@@ -111,8 +112,7 @@ export const Renderer = ({
   };
 
   const initializePoints = async () => {
-    let didSetPointsFromPersistedData: boolean =
-      await setPointsFromPersistedData();
+    didSetPointsFromPersistedData = await setPointsFromPersistedData();
 
     if (didSetPointsFromPersistedData) {
       return;
@@ -162,10 +162,13 @@ export const Renderer = ({
     const w = width;
     const h = height;
     const pc = pointCount;
+    const didGetRenderingDataFromDisk =
+      didGetEncodedLineDataBufferFromDisk && didSetPointsFromPersistedData;
+    const isFirstPass = !didGetRenderingDataFromDisk; // alias
 
     ctx.clearRect(0, 0, w, h);
 
-    if (!didGetEncodedLineDataBufferFromDisk) {
+    if (isFirstPass) {
       ctxAux.clearRect(0, 0, w, h);
       ctxAux.drawImage(videoRef.current!, 0, 0, width, height); // NOTE : the 4th and 5th arguments determine video scaling, when displaying to the convas.
 
@@ -173,9 +176,17 @@ export const Renderer = ({
       linePointIndicesMap.clear();
 
       for (let i = 0; i < pc; i++) {
-        points[i].draw(
-          pointsDarknessBitmap,
-          ctx,
+        // NOTE : Uncomment this to render lines in first pass
+        // points[i].draw(
+        //   pointsIndicesInDarknessBitmap,
+        //   ctx,
+        //   pointCount,
+        //   points,
+        //   maxDistThresh,
+        //   updateLinePointIndicesMap
+        // );
+        points[i].drawWithoutRendering(
+          pointsIndicesInDarknessBitmap,
           pointCount,
           points,
           maxDistThresh,
@@ -233,7 +244,7 @@ export const Renderer = ({
         points[i].x,
         points[i].y
       );
-      pointsDarknessBitmap.setBitValue(i, isPixelInDarkSpace);
+      pointsIndicesInDarknessBitmap.setBitValue(i, isPixelInDarkSpace);
     }
   };
 
