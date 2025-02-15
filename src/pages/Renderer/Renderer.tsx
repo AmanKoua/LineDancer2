@@ -48,19 +48,29 @@ export const Renderer = ({
   pointCount = 1000; // TODO : NOTE - Data folder seems to need to be deleted when the pointcount changes (fails otherwise)
   width = 500;
   height = 500;
-  maxDistThresh = 30;
+  maxDistThresh = 10;
   fps = 30; // TODO : revert after testing (to ~30)
   rngSeed = 1360736; // TODO : take rngSeed from setup component. Store RNGseed in data dir
   // instanceUUID = uuidv4();
   instanceUUID = "9893b066-a0b3-4583-a749-9f078b1f9cae"; // TODO : take instanceUUID from setup component
 
+  let audioContext;
+  let decodedAudioBuffer;
+  let audioBufferSourceNode: AudioBufferSourceNode;
+  let audioBufferAnalyserNode: AnalyserNode;
+  let frequencyData: Uint8Array;
+  let fftSize;
+  let avgAudioVol: number;
+
   let canvasRef = useRef<HTMLCanvasElement>(null);
   let canvasRefAux = useRef<HTMLCanvasElement>(null);
   let ctx: CanvasRenderingContext2D | undefined = undefined;
   let ctxAux: CanvasRenderingContext2D | undefined = undefined;
+
   let videoRef = useRef<HTMLVideoElement>(null);
   let renderInterval: NodeJS.Timeout | undefined = undefined;
   let clearRenderInterval: NodeJS.Timeout | undefined = undefined;
+
   let points: Point[] = [];
   let updatePointsCallCount = 0;
   const pointsIndicesInDarknessBitmap = new Bitmap(pointCount);
@@ -72,6 +82,8 @@ export const Renderer = ({
   let didGetEncodedLineDataBufferFromDisk = false;
   let didSetPointsFromPersistedData: boolean = false;
   let hasCalledGetSerializedEncodedLineData: boolean = false;
+
+  let isFirstPass: boolean;
 
   const updatePoints = (val: IPoint[]) => {
     updatePointsCallCount++;
@@ -165,11 +177,13 @@ export const Renderer = ({
     const pc = pointCount;
     const didGetRenderingDataFromDisk =
       didGetEncodedLineDataBufferFromDisk && didSetPointsFromPersistedData;
-    const isFirstPass = !didGetRenderingDataFromDisk; // alias
+    isFirstPass = !didGetRenderingDataFromDisk; // alias
 
     ctx.clearRect(0, 0, w, h);
 
     if (isFirstPass) {
+      await refreshAudioDataAvgVolume();
+
       ctxAux.clearRect(0, 0, w, h);
       ctxAux.drawImage(videoRef.current!, 0, 0, width, height); // NOTE : the 4th and 5th arguments determine video scaling, when displaying to the convas.
 
@@ -183,14 +197,14 @@ export const Renderer = ({
         //   ctx,
         //   pointCount,
         //   points,
-        //   maxDistThresh,
+        //   maxDistThresh + ((avgAudioVol*avgAudioVol) / 200),
         //   updateLinePointIndicesMap
         // );
         points[i].drawWithoutRendering(
           pointsIndicesInDarknessBitmap,
           pointCount,
           points,
-          maxDistThresh,
+        maxDistThresh + ((avgAudioVol*avgAudioVol) / 200),
           updateLinePointIndicesMap
         );
       }
@@ -230,7 +244,6 @@ export const Renderer = ({
         width,
         height
       );
-
     }
 
     /*
@@ -239,8 +252,7 @@ export const Renderer = ({
       to false, the points will have moved, but the decodedPointIndicesIdx would still be at index 0 of the
       serialized protobuf data (if 'decodedPointIndicesIdx++' is executed within the else block above).
     */
-    decodedPointIndicesIdx++; 
-
+    decodedPointIndicesIdx++;
   };
 
   const refreshPointsToDarknessBitmap = (
@@ -271,7 +283,6 @@ export const Renderer = ({
   };
 
   const getEncodedLineDataBuffer = async (): Promise<boolean> => {
-
     let refreshCount = 0;
     getSerializedEncodedLineData(instanceUUID);
     hasCalledGetSerializedEncodedLineData = true;
@@ -298,6 +309,39 @@ export const Renderer = ({
     decodedPointIndicesArr = decodedData.rows;
   };
 
+  const prepareAudioDataForAnalysis = async () => {
+    audioContext = new window.AudioContext();
+
+    if (!audioFileBuffer) {
+      console.log("audio file buffer was null!");
+      return;
+    }
+
+    fftSize = 2048;
+    decodedAudioBuffer = await audioContext.decodeAudioData(audioFileBuffer);
+    audioBufferSourceNode = audioContext.createBufferSource();
+    audioBufferSourceNode.buffer = decodedAudioBuffer;
+    audioBufferAnalyserNode = audioContext.createAnalyser();
+    audioBufferAnalyserNode.fftSize = fftSize;
+
+    audioBufferSourceNode.connect(audioBufferAnalyserNode);
+    audioBufferAnalyserNode.connect(audioContext.destination);
+    frequencyData = new Uint8Array(audioBufferAnalyserNode.frequencyBinCount);
+  };
+
+  const refreshAudioDataAvgVolume = async () => {
+    audioBufferAnalyserNode.getByteFrequencyData(frequencyData);
+
+    let ArrSize = frequencyData.length;
+    avgAudioVol = 0;
+
+    for (let i = 0; i < frequencyData.length; i++) {
+      avgAudioVol += frequencyData[i];
+    }
+
+    avgAudioVol /= ArrSize;
+  };
+
   const startRendering = async () => {
     if (
       !canvasRef.current ||
@@ -315,7 +359,10 @@ export const Renderer = ({
       await setDecodedPointIndicesArr();
     }
 
+    await prepareAudioDataForAnalysis();
+
     videoRef.current.play();
+    audioBufferSourceNode.start();
 
     renderInterval = setInterval(() => {
       draw();
@@ -333,7 +380,10 @@ export const Renderer = ({
   const handleVideoEnding = async () => {
     clearInterval(renderInterval);
     clearInterval(clearRenderInterval);
-    serializeAndPersistEncodedLineData(encodedPointIdicesArr, instanceUUID);
+
+    if (isFirstPass) {
+      serializeAndPersistEncodedLineData(encodedPointIdicesArr, instanceUUID);
+    }
   };
 
   useEffect(() => {
